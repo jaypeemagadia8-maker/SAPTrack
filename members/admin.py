@@ -9,3 +9,8 @@ class SAPMemberAdmin(admin.ModelAdmin):
     list_filter = ("is_active", "date_joined")
     search_fields = ("student_number", "user__username", "user__first_name", "user__last_name")
     autocomplete_fields = ("user",)
+
+
+admin.site.site_header = "SAPTrack Administration"
+admin.site.site_title = "SAPTrack Admin"
+admin.site.index_title = "Student Assistance Program management"

@@ -1,0 +1,1 @@
+"""SAPTrack Django project package."""
