@@ -2,6 +2,7 @@ import csv
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,6 +11,7 @@ from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_POST
 
 from attendance.models import AttendanceRecord
+from assignments.models import AreaAssignment
 from duty_monitoring.models import AreaDutySession
 from duty_monitoring.services import get_weekly_area_duty_summary
 from members.models import SAPMember
@@ -35,6 +37,14 @@ def index(request):
         return redirect("members:login")
 
     today = timezone.localdate()
+    today_attendance = member.attendance_records.filter(attendance_date=today).first()
+    open_duty = member.area_duty_sessions.filter(ended_at__isnull=True).select_related(
+        "area_assignment__area"
+    ).first()
+    current_area_assignment = AreaAssignment.objects.filter(
+        member=member,
+        effective_from__lte=today,
+    ).filter(Q(effective_to__isnull=True) | Q(effective_to__gte=today)).select_related("area").first()
     attendance = member.attendance_records.order_by("-attendance_date")[:8]
     room_assignments = member.room_assignments.select_related("room").order_by("-effective_from")[:5]
     area_assignments = member.area_assignments.select_related("area").order_by("-effective_from")[:5]
@@ -50,6 +60,9 @@ def index(request):
     context = {
         "member": member,
         "attendance": attendance,
+        "today_attendance": today_attendance,
+        "open_duty": open_duty,
+        "current_area_assignment": current_area_assignment,
         "attendance_count": member.attendance_records.count(),
         "attendance_this_month": member.attendance_records.filter(
             attendance_date__year=today.year, attendance_date__month=today.month
@@ -63,6 +76,77 @@ def index(request):
         "overdue_tasks": overdue_tasks,
     }
     return render(request, "dashboard/index.html", context)
+
+
+@login_required
+@require_POST
+def time_in(request):
+    member = _get_active_member(request)
+    if member is None:
+        messages.error(request, "Your account is inactive. Please contact your SAP coordinator.")
+        return redirect("members:login")
+    today = timezone.localdate()
+    now = timezone.now()
+    record, created = AttendanceRecord.objects.get_or_create(
+        member=member,
+        attendance_date=today,
+        defaults={"time_in": now, "recorded_by": request.user},
+    )
+    if created:
+        messages.success(request, "Attendance submitted. Your time-in has been recorded.")
+    elif record.time_out:
+        messages.info(request, "Your attendance for today is already complete.")
+    else:
+        messages.info(request, "Your time-in was already recorded today.")
+    return redirect("dashboard_index")
+
+
+@login_required
+@require_POST
+def start_duty(request):
+    member = _get_active_member(request)
+    if member is None:
+        messages.error(request, "Your account is inactive. Please contact your SAP coordinator.")
+        return redirect("members:login")
+    today = timezone.localdate()
+    if member.area_duty_sessions.filter(ended_at__isnull=True).exists():
+        messages.info(request, "You already have an active duty session. End it before starting another.")
+        return redirect("dashboard_index")
+    assignment = AreaAssignment.objects.filter(
+        member=member,
+        effective_from__lte=today,
+    ).filter(Q(effective_to__isnull=True) | Q(effective_to__gte=today)).select_related("area").first()
+    if assignment is None:
+        messages.error(request, "You do not have an active area assignment for today. Please contact your coordinator.")
+        return redirect("dashboard_index")
+    AreaDutySession.objects.create(
+        member=member,
+        area_assignment=assignment,
+        started_at=timezone.now(),
+        recorded_by=request.user,
+    )
+    messages.success(request, f"Duty started at {assignment.area.name}. Use End Duty when you finish.")
+    return redirect("dashboard_index")
+
+
+@login_required
+@require_POST
+def end_duty(request):
+    member = _get_active_member(request)
+    if member is None:
+        messages.error(request, "Your account is inactive. Please contact your SAP coordinator.")
+        return redirect("members:login")
+    with transaction.atomic():
+        session = member.area_duty_sessions.select_for_update().filter(
+            ended_at__isnull=True
+        ).order_by("-started_at").first()
+        if session is None:
+            messages.error(request, "There is no active duty session to end.")
+        else:
+            session.ended_at = timezone.now()
+            session.save(update_fields=["ended_at"])
+            messages.success(request, "Duty ended and recorded. You are still logged in to SAPTrack.")
+    return redirect("dashboard_index")
 
 
 @login_required
