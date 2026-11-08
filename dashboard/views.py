@@ -1,12 +1,13 @@
 import csv
-from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import Q
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.dateparse import parse_date
+from django.views.decorators.http import require_POST
 
 from attendance.models import AttendanceRecord
 from duty_monitoring.models import AreaDutySession
@@ -42,14 +43,11 @@ def index(request):
     tasks = member.tasks.all()
     due_tasks = tasks.exclude(status=StudentTask.Status.VERIFIED).filter(due_date__isnull=False, due_date__gte=today).order_by("due_date")[:3]
     overdue_tasks = tasks.exclude(status=StudentTask.Status.VERIFIED).filter(due_date__lt=today).order_by("due_date")[:3]
-    attendance_this_month = member.attendance_records.filter(
-        attendance_date__year=today.year, attendance_date__month=today.month
-    ).count()
     context = {
         "member": member,
         "attendance": attendance,
         "attendance_count": member.attendance_records.count(),
-        "attendance_this_month": attendance_this_month,
+        "attendance_this_month": member.attendance_records.filter(attendance_date__year=today.year, attendance_date__month=today.month).count(),
         "room_assignments": room_assignments,
         "area_assignments": area_assignments,
         "area_sessions": area_sessions,
@@ -62,16 +60,18 @@ def index(request):
 
 
 @login_required
+@require_POST
 def submit_task(request, task_id):
     member = _get_active_member(request)
     if member is None:
         messages.error(request, "Hindi aktibo ang account mo. Makipag-ugnayan sa SAP coordinator.")
         return redirect("members:login")
-    if request.method != "POST":
-        return redirect("dashboard_index")
     task = get_object_or_404(StudentTask, pk=task_id, member=member)
-    task.mark_submitted()
-    messages.success(request, "Naipasa ang task mo para ma-review ng coordinator.")
+    if task.status == StudentTask.Status.TODO:
+        task.mark_submitted()
+        messages.success(request, "Naipasa ang task mo para ma-review ng coordinator.")
+    else:
+        messages.info(request, "Naipasa na o na-verify na ang task na ito.")
     return redirect("dashboard_index")
 
 
@@ -84,21 +84,38 @@ def coordinator_dashboard(request):
     query = request.GET.get("q", "").strip()
     members = SAPMember.objects.select_related("user").order_by("student_number")
     if query:
-        from django.db.models import Q
-        members = members.filter(
-            Q(student_number__icontains=query)
-            | Q(user__username__icontains=query)
-            | Q(user__first_name__icontains=query)
-            | Q(user__last_name__icontains=query)
-        )
+        members = members.filter(Q(student_number__icontains=query) | Q(user__username__icontains=query) | Q(user__first_name__icontains=query) | Q(user__last_name__icontains=query))
+    pending_tasks = StudentTask.objects.filter(status=StudentTask.Status.SUBMITTED).select_related("member__user").order_by("submitted_at", "due_date")
     context = {
         "query": query,
         "members": members[:100],
         "student_count": SAPMember.objects.count(),
-        "pending_tasks": StudentTask.objects.filter(status=StudentTask.Status.SUBMITTED).count(),
+        "pending_tasks": pending_tasks,
+        "pending_task_count": pending_tasks.count(),
         "today": timezone.localdate(),
     }
     return render(request, "dashboard/coordinator.html", context)
+
+
+@user_passes_test(_is_coordinator)
+@require_POST
+def review_task(request, task_id):
+    task = get_object_or_404(StudentTask.objects.select_related("member"), pk=task_id, status=StudentTask.Status.SUBMITTED)
+    action = request.POST.get("action")
+    if action == "verify":
+        task.status = StudentTask.Status.VERIFIED
+        task.verified_at = timezone.now()
+        task.verified_by = request.user
+        task.save(update_fields=["status", "verified_at", "verified_by"])
+        messages.success(request, f"Na-verify ang task na '{task.title}'.")
+    elif action == "return":
+        task.status = StudentTask.Status.TODO
+        task.submitted_at = None
+        task.save(update_fields=["status", "submitted_at"])
+        messages.info(request, f"Ibinalik sa student ang task na '{task.title}' para muling maisumite.")
+    else:
+        return HttpResponseBadRequest("Hindi kilalang review action.")
+    return redirect("coordinator_dashboard")
 
 
 @user_passes_test(_is_coordinator)
