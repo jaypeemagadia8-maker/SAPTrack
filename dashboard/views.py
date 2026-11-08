@@ -44,7 +44,9 @@ def index(request):
     current_area_assignment = AreaAssignment.objects.filter(
         member=member,
         effective_from__lte=today,
-    ).filter(Q(effective_to__isnull=True) | Q(effective_to__gte=today)).select_related("area").first()
+    ).filter(Q(effective_to__isnull=True) | Q(effective_to__gte=today)).select_related(
+        "area"
+    ).order_by("-effective_from").first()
     attendance = member.attendance_records.order_by("-attendance_date")[:8]
     room_assignments = member.room_assignments.select_related("room").order_by("-effective_from")[:5]
     area_assignments = member.area_assignments.select_related("area").order_by("-effective_from")[:5]
@@ -86,11 +88,10 @@ def time_in(request):
         messages.error(request, "Your account is inactive. Please contact your SAP coordinator.")
         return redirect("members:login")
     today = timezone.localdate()
-    now = timezone.now()
     record, created = AttendanceRecord.objects.get_or_create(
         member=member,
         attendance_date=today,
-        defaults={"time_in": now, "recorded_by": request.user},
+        defaults={"time_in": timezone.now(), "recorded_by": request.user},
     )
     if created:
         messages.success(request, "Attendance submitted. Your time-in has been recorded.")
@@ -108,23 +109,33 @@ def start_duty(request):
     if member is None:
         messages.error(request, "Your account is inactive. Please contact your SAP coordinator.")
         return redirect("members:login")
+
     today = timezone.localdate()
-    if member.area_duty_sessions.filter(ended_at__isnull=True).exists():
-        messages.info(request, "You already have an active duty session. End it before starting another.")
+    if not member.attendance_records.filter(attendance_date=today).exists():
+        messages.error(request, "Submit your attendance before starting duty.")
         return redirect("dashboard_index")
-    assignment = AreaAssignment.objects.filter(
-        member=member,
-        effective_from__lte=today,
-    ).filter(Q(effective_to__isnull=True) | Q(effective_to__gte=today)).select_related("area").first()
-    if assignment is None:
-        messages.error(request, "You do not have an active area assignment for today. Please contact your coordinator.")
-        return redirect("dashboard_index")
-    AreaDutySession.objects.create(
-        member=member,
-        area_assignment=assignment,
-        started_at=timezone.now(),
-        recorded_by=request.user,
-    )
+
+    with transaction.atomic():
+        # Locking the member serializes concurrent start requests on databases that support row locks.
+        locked_member = SAPMember.objects.select_for_update().get(pk=member.pk)
+        if locked_member.area_duty_sessions.filter(ended_at__isnull=True).exists():
+            messages.info(request, "You already have an active duty session. End it before starting another.")
+            return redirect("dashboard_index")
+        assignment = AreaAssignment.objects.filter(
+            member=locked_member,
+            effective_from__lte=today,
+        ).filter(Q(effective_to__isnull=True) | Q(effective_to__gte=today)).select_related(
+            "area"
+        ).order_by("-effective_from").first()
+        if assignment is None:
+            messages.error(request, "You do not have an active area assignment for today. Please contact your coordinator.")
+            return redirect("dashboard_index")
+        AreaDutySession.objects.create(
+            member=locked_member,
+            area_assignment=assignment,
+            started_at=timezone.now(),
+            recorded_by=request.user,
+        )
     messages.success(request, f"Duty started at {assignment.area.name}. Use End Duty when you finish.")
     return redirect("dashboard_index")
 
