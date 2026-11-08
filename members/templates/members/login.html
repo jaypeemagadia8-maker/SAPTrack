@@ -3,42 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#102a27">
+  <meta name="theme-color" content="#06152f">
   <title>Sign in · SAPTrack</title>
   <style>
-    :root{color-scheme:light;--ink:#172b28;--muted:#75817d;--green:#246b59;--line:#e6ebe7;--cream:#f6f7f2}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--cream);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
-    .shell{min-height:100vh;display:grid;grid-template-columns:1.04fr .96fr}.story{position:relative;overflow:hidden;background:#102a27;color:white;padding:clamp(34px,7vw,92px);display:flex;flex-direction:column;justify-content:space-between}.story:before,.story:after{content:"";position:absolute;border:1px solid #ffffff18;border-radius:50%;width:510px;height:510px;right:-190px;top:15%}.story:after{width:360px;height:360px;right:-115px;top:25%;background:#c9e8d512}.brand{position:relative;z-index:1;display:flex;align-items:center;gap:12px;font-weight:750;letter-spacing:-.03em}.brandmark{display:grid;place-items:center;width:40px;height:40px;border-radius:14px;background:#d6edca;color:#173c31;font-weight:900}.story-copy{position:relative;z-index:1;max-width:530px;margin:90px 0}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.18em;color:#b8d5c7;font-weight:700}.story h1{font-size:clamp(42px,6vw,76px);line-height:1.02;letter-spacing:-.055em;margin:20px 0}.story-copy p{font-size:17px;line-height:1.75;color:#c5d4ce;max-width:450px}.quote{position:relative;z-index:1;color:#c5d4ce;font-size:13px}.form-side{display:grid;place-items:center;padding:32px}.card{width:min(100%,430px)}.mobile-brand{display:none}.card h2{font-size:34px;letter-spacing:-.04em;margin:0 0 8px}.intro{color:var(--muted);margin:0 0 32px}.label{display:block;font-size:13px;font-weight:700;margin:18px 0 8px}.field{width:100%;height:52px;border:1px solid var(--line);border-radius:13px;padding:0 15px;font:inherit;background:white;outline:none;transition:.2s}.field:focus{border-color:var(--green);box-shadow:0 0 0 4px #246b5918}.button{margin-top:24px;width:100%;height:52px;border:0;border-radius:13px;background:var(--green);color:white;font:inherit;font-weight:700;cursor:pointer;box-shadow:0 9px 20px #246b5925}.button:hover{background:#1b5849;transform:translateY(-1px)}.errors{padding:12px 14px;border:1px solid #f1c7bd;background:#fff2ef;color:#a33f31;border-radius:12px;font-size:14px;margin:0 0 18px}.errors ul{margin:0;padding-left:18px}.help{font-size:13px;line-height:1.65;color:var(--muted);margin-top:24px}.foot{margin-top:46px;color:#99a29e;font-size:12px}
-    @media(max-width:820px){.shell{grid-template-columns:1fr}.story{display:none}.form-side{min-height:100vh;padding:28px}.mobile-brand{display:flex;margin-bottom:58px}.card h2{font-size:30px}}
+    :root{color-scheme:dark;--blue:#087bff;--cyan:#49c7ff;--white:#f5f8ff;--muted:#a9bad6;--panel:#07152de8}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;min-height:100svh;overflow-x:hidden;background:#06152f;color:var(--white);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+    .scene{position:relative;isolation:isolate;min-height:100vh;min-height:100svh;display:flex;align-items:center;justify-content:center;padding:38px 24px 145px;background:radial-gradient(ellipse at 50% 45%,#164b91 0,#0a2856 37%,#06152f 76%);overflow:hidden}
+    /* CSS campus backdrop so the login remains self-contained and works offline. */
+    .campus{position:absolute;inset:0;z-index:-2;opacity:.5;background:linear-gradient(180deg,#091a38a6,#071a3bb3),linear-gradient(90deg,transparent 0 7%,#263d63 7% 9%,transparent 9% 13%,#1b3156 13% 38%,transparent 38% 41%,#30486c 41% 44%,transparent 44% 100%),linear-gradient(0deg,#07152f 0 14%,transparent 14% 100%),repeating-linear-gradient(90deg,transparent 0 68px,#9ab9e51f 69px 72px),repeating-linear-gradient(0deg,transparent 0 48px,#9ab9e51c 49px 52px);clip-path:polygon(0 10%,100% 0,100% 82%,0 92%)}
+    .campus:before,.campus:after{content:"";position:absolute;bottom:9%;height:44%;width:43%;border:1px solid #8cc8ff44;background:repeating-linear-gradient(0deg,transparent 0 52px,#96caff24 53px 56px),repeating-linear-gradient(90deg,#0b2248 0 72px,#78a6df33 73px 77px);box-shadow:0 0 55px #077aff25}.campus:before{left:0;transform:skewY(-7deg);transform-origin:bottom left}.campus:after{right:0;height:67%;width:40%;bottom:16%;transform:skewY(5deg);transform-origin:bottom right}
+    .glow{position:absolute;z-index:-1;width:700px;height:700px;border-radius:50%;left:50%;top:44%;transform:translate(-50%,-50%);background:#087bff24;filter:blur(75px)}
+    .corner{position:absolute;width:270px;height:220px;border-color:#087bff;border-style:solid;opacity:.9;filter:drop-shadow(0 0 9px #0785ff)}.corner.top-left{left:-72px;top:-62px;border-width:0 0 8px 8px;transform:skew(-42deg)}.corner.bottom-right{right:-75px;bottom:-75px;border-width:8px 8px 0 0;transform:skew(-42deg)}.corner:after{content:"";position:absolute;inset:19px;border:2px solid #d5e8ff;border-width:0 0 2px 2px}
+    .slogan{position:absolute;right:5.5%;top:12%;z-index:1;text-align:right;font-family:"Segoe Script","Bradley Hand",cursive;font-size:clamp(23px,3vw,42px);font-style:italic;line-height:1.13;color:#e3edff;text-shadow:0 2px 14px #06152f}.slogan:after{content:"";display:block;width:78%;height:4px;margin:12px 0 0 auto;background:linear-gradient(90deg,transparent,var(--blue));transform:rotate(-8deg);border-radius:8px}
+    .login-card{position:relative;z-index:2;width:min(730px,calc(100% - 24px));padding:30px clamp(23px,5vw,62px) 25px;border:1px solid #168bff;border-radius:34px;background:linear-gradient(145deg,#06142fee,#06102beF 68%,#08285aeb);box-shadow:0 0 0 1px #8cd8ff35 inset,0 0 24px #087bffb5,0 0 75px #087bff54,0 22px 70px #0009;backdrop-filter:blur(15px)}
+    .brand{display:flex;justify-content:center;align-items:center;gap:17px;margin-bottom:27px}.crest{width:90px;height:90px;display:grid;place-items:center;color:#fff;filter:drop-shadow(0 0 12px #087bff)}.crest svg{width:100%;height:100%}.brand-copy{text-align:center}.brand-name{font-size:clamp(39px,6vw,62px);font-weight:900;letter-spacing:-.055em;font-style:italic;line-height:1}.brand-name span{color:#168dff}.brand-sub{font-size:clamp(13px,2vw,20px);color:#c3d6fa;letter-spacing:.04em;margin-top:8px}.brand-sub:after{content:"";display:block;width:92%;height:1px;background:linear-gradient(90deg,transparent,#168dff,transparent);margin:7px auto 0}
+    .messages{list-style:none;padding:0;margin:0 0 13px}.messages li,.errors{background:#622b40;color:#ffe1e7;border:1px solid #ff718b66;border-radius:11px;padding:10px 13px;margin:8px 0}.login-form{display:grid;gap:14px}.field-wrap{position:relative}.field-icon{position:absolute;left:20px;top:50%;transform:translateY(-50%);width:23px;height:23px;color:#dbeaff;pointer-events:none}.field{width:100%;height:72px;padding:0 20px 0 74px;border:1.5px solid #078bff;border-radius:999px;background:#030d20c9;color:white;font:inherit;font-size:19px;outline:none;box-shadow:0 0 13px #087bff1c inset;transition:.18s}.field::placeholder{color:#a7b2c7}.field:focus{border-color:#54c7ff;box-shadow:0 0 0 3px #168dff35,0 0 21px #087bff72}.button{height:70px;margin-top:5px;border:1px solid #62c5ff;border-radius:999px;background:linear-gradient(110deg,#258bff,#0755ed 70%,#087bff);color:#fff;font-weight:800;font-size:22px;cursor:pointer;box-shadow:0 0 24px #087bff98,inset 0 1px #ffffff80;transition:transform .15s,filter .15s}.button:hover{filter:brightness(1.13);transform:translateY(-1px)}.button svg{vertical-align:middle;margin-right:8px}.secure{display:flex;align-items:center;justify-content:center;gap:12px;margin:18px 0 12px;color:#f1f5ff;font-size:16px}.secure:before,.secure:after{content:"";height:1px;flex:1;background:linear-gradient(90deg,transparent,#168dff)}.secure:after{transform:rotate(180deg)}.secure svg{width:30px;height:34px;color:#168dff;filter:drop-shadow(0 0 7px #168dff)}.links{text-align:center;color:#b8c9e8;font-size:14px;font-style:italic;letter-spacing:.05em}.links span{padding:0 15px;color:#138dff}
+    .featurebar{position:absolute;z-index:2;bottom:20px;left:50%;transform:translateX(-50%);width:min(1230px,calc(100% - 50px));display:grid;grid-template-columns:repeat(4,1fr);padding:16px 12px;background:#06142bd9;border:1px solid #168bff;border-radius:18px;box-shadow:0 0 25px #087bff3a;backdrop-filter:blur(12px)}.feature{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;padding:4px 12px;color:#f2f6ff;font-size:15px;line-height:1.15}.feature+.feature{border-left:1px solid #168bff}.feature svg{width:36px;height:36px;color:#168dff;filter:drop-shadow(0 0 8px #087bff8c)}
+    @media(max-width:850px){.slogan{top:3%;right:5%;font-size:24px}.scene{padding-top:120px;padding-bottom:155px}.login-card{padding:25px 24px}.crest{width:67px;height:67px}.brand{gap:12px;margin-bottom:22px}.field{height:62px;font-size:17px}.button{height:62px}.featurebar{width:calc(100% - 24px);bottom:12px;padding:10px 4px}.feature{font-size:12px;padding:3px 4px}.feature svg{width:28px;height:28px}}
+    @media(max-width:520px){.scene{padding:88px 10px 135px}.slogan{top:14px;right:15px;font-size:19px}.login-card{width:100%;border-radius:24px;padding:22px 17px}.crest{width:52px;height:52px}.brand-name{font-size:37px}.brand-sub{font-size:11px}.brand{gap:9px;margin-bottom:20px}.field{height:56px;padding-left:58px;font-size:16px}.field-icon{left:17px;width:20px;height:20px}.button{height:57px;font-size:19px}.featurebar{grid-template-columns:repeat(4,1fr);bottom:9px}.feature{font-size:10px}.feature svg{width:24px;height:24px}.links{font-size:12px}.links span{padding:0 7px}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
   </style>
 </head>
 <body>
-  <main class="shell">
-    <section class="story" aria-label="Welcome">
-      <div class="brand"><span class="brandmark">S</span><span>SAPTrack</span></div>
-      <div class="story-copy"><div class="eyebrow">Student Assistance Program</div><h1>Your service.<br>Your progress.</h1><p>A calmer, clearer way to keep up with your attendance, assignments, and service journey.</p></div>
-      <div class="quote">A thoughtful space for the work you do every day.</div>
+  <main class="scene">
+    <div class="campus" aria-hidden="true"></div><div class="glow" aria-hidden="true"></div><div class="corner top-left" aria-hidden="true"></div><div class="corner bottom-right" aria-hidden="true"></div>
+    <div class="slogan" aria-hidden="true">Track Today,<br>Support Tomorrow.</div>
+    <section class="login-card" aria-label="SAPTrack sign in">
+      <header class="brand">
+        <div class="crest" aria-hidden="true"><svg viewBox="0 0 100 100" fill="none"><path d="M50 8 77 19 75 49c-2 19-13 31-25 39C38 80 27 68 25 49l-2-30L50 8Z" stroke="currentColor" stroke-width="3"/><path d="m31 35 19 7 19-7v25L50 68 31 60V35Z" stroke="currentColor" stroke-width="3"/><path d="M50 42v26M36 40l11 4v17l-11-4V40Zm28 0-11 4v17l11-4V40ZM37 24l13-10 13 10-13 7-13-7Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M50 14v-5m-2 0h4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M19 48c-7 12-4 27 8 35m54-35c7 12 4 27-8 35M17 53l9 1-3 8m60-9-9 1 3 8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div>
+        <div class="brand-copy"><div class="brand-name">SAP<span>Track</span></div><div class="brand-sub">Student Assistance Program<br>Monitoring System</div></div>
+      </header>
+      {% if messages %}<ul class="messages">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}
+      {% if form.non_field_errors %}<div class="errors">{{ form.non_field_errors }}</div>{% endif %}
+      <form class="login-form" method="post">
+        {% csrf_token %}{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        <div class="field-wrap"><svg class="field-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.1 0-7.5 2.1-7.5 4.8V21h15v-2.2c0-2.7-3.4-4.8-7.5-4.8Z"/></svg><input class="field" type="text" name="username" id="id_username" autocomplete="username" placeholder="Username" aria-label="Username" required autofocus></div>
+        {% if form.username.errors %}<div class="errors">{{ form.username.errors }}</div>{% endif %}
+        <div class="field-wrap"><svg class="field-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2ZM10 7a2 2 0 0 1 4 0v2h-4V7Zm2 11.7a2 2 0 1 1 1-3.7 2 2 0 0 1-1 3.7Z"/></svg><input class="field" type="password" name="password" id="id_password" autocomplete="current-password" placeholder="Password" aria-label="Password" required></div>
+        {% if form.password.errors %}<div class="errors">{{ form.password.errors }}</div>{% endif %}
+        <button class="button" type="submit"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5m5 5H3"/></svg>Log In</button>
+      </form>
+      <div class="secure"><svg viewBox="0 0 24 28" fill="currentColor" aria-hidden="true"><path d="M12 1 22 5v8c0 6-4.3 10.7-10 14C6.3 23.7 2 19 2 13V5l10-4Z"/><path d="m7.5 13 3 3 6-6" fill="none" stroke="#06152f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Secure Access</span></div>
+      <div class="links">Monitor <span>|</span> Track <span>|</span> Support</div>
     </section>
-    <section class="form-side">
-      <div class="card">
-        <div class="brand mobile-brand"><span class="brandmark">S</span><span>SAPTrack</span></div>
-        <h2>Welcome back</h2><p class="intro">Sign in to your student account to continue.</p>
-        {% if form.non_field_errors %}<div class="errors">{{ form.non_field_errors }}</div>{% endif %}
-        <form method="post">
-          {% csrf_token %}
-          {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
-          <label class="label" for="id_username">Student number or username</label>
-          <input class="field" type="text" name="username" id="id_username" autocomplete="username" placeholder="e.g. 2026-00123" required autofocus>
-          {% if form.username.errors %}<div class="errors">{{ form.username.errors }}</div>{% endif %}
-          <label class="label" for="id_password">Password</label>
-          <input class="field" type="password" name="password" id="id_password" autocomplete="current-password" placeholder="Enter your password" required>
-          {% if form.password.errors %}<div class="errors">{{ form.password.errors }}</div>{% endif %}
-          <button class="button" type="submit">Sign in</button>
-        </form>
-        <p class="help">Your account is provided by your SAP coordinator. If you have not received your login details or need help resetting your password, please contact them.</p>
-        <div class="foot">© {% now "Y" %} SAPTrack · Student portal</div>
-      </div>
-    </section>
+    <footer class="featurebar" aria-label="System features">
+      <div class="feature"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm6-1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM2 20v-2c0-3 3.2-5 7-5s7 2 7 5v2H2Zm14-6c3.5 0 6 1.6 6 4v2h-4v-2c0-1.6-.7-3-2-4Z"/></svg><span>SAP<br>Members</span></div>
+      <div class="feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="17" height="17" rx="2"/><path d="M7 2v4m9-4v4M3 9h17m-9 4h3m-3 4h3"/><circle cx="18" cy="18" r="4" fill="#07152f"/><path d="M18 16v2l1 1"/></svg><span>Duty<br>Attendance</span></div>
+      <div class="feature"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 3h13v18H3zM18 7l4 4v2l-4 4v-3h-3v-4h3V7ZM6 6h7v2H6zm0 4h7v2H6zm0 4h5v2H6z"/></svg><span>Room<br>Assignments</span></div>
+      <div class="feature"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1a8 8 0 0 0-8 8c0 6 8 14 8 14s8-8 8-14a8 8 0 0 0-8-8Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/></svg><span>Area<br>Assignments</span></div>
+    </footer>
   </main>
 </body>
 </html>

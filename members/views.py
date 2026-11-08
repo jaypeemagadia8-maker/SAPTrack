@@ -13,3 +13,8 @@ class StudentLoginView(auth_views.LoginView):
 
 class StudentLogoutView(auth_views.LogoutView):
     next_page = reverse_lazy("members:login")
+
+
+class StudentPasswordChangeView(auth_views.PasswordChangeView):
+    template_name = "members/password_change.html"
+    success_url = reverse_lazy("dashboard_index")
